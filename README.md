@@ -2,6 +2,16 @@
 REST based file upload/download service
 
 Steps to deploy on AWS
+
+Create an AWS instance..
+Open the following ports in the security group
+
+```
+Custom TCP : 8000
+HTTP: 80
+HTTPS: 
+```
+
 Launch EC2 instance
 Use system_design.pem to access the instance
 
@@ -10,10 +20,12 @@ cd /home/pankaj/Documents/aws/pems
 ssh -i system_design.pem ubuntu@52.55.169.6
 ```
 
-Do an update of the system using
+Use the following bootstrap script to install softwares
 
 ```
-sudo apt update
+sudo apt-get update -y
+sudo apt-get install gunicorn -y
+sudp apt-get install apache2 -y
 ```
 
 Install gunicorn
