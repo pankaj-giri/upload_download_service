@@ -9,7 +9,7 @@ Open the following ports in the security group
 ```
 Custom TCP : 8000
 HTTP: 80
-HTTPS: 
+HTTPS: 443
 ```
 
 Launch EC2 instance
