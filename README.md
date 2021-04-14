@@ -24,8 +24,9 @@ Use the following bootstrap script to install softwares
 
 ```
 sudo apt-get update -y
-sudo apt-get install gunicorn -y
 sudo apt-get install apache2 -y
+sudo apt-get install gunicorn -y
+sudo apt-get -y install python3-pip
 ```
 
 Install gunicorn
@@ -43,11 +44,20 @@ cd upload_download_service
 gunicorn --bind 0.0.0.0:8000 app:app
 ```
 
-Result of running Jmeter stress on a single node of EC2 instance (t2 micro) and with a single worker thread
+Result of running Jmeter stress on a single node of EC2 instance (t2 micro) and with 3 worker threads
 
 ```
-Throughput : 5.5/min
-Average: 84625 ms
-min: 8819 ms
-max: 113420 ms
+Throughput : 10/min
+Average: 44635 ms
+min: 5007 ms
+max: 114526 ms
+```
+
+Result of running Jmeter stress on a 2 EC2 instances behind a load balancer.. each worker configuration same as the test in the single instance.
+
+```
+Throughput : 39.6/min
+Average: 12516 ms
+min: 3256 ms
+max: 28743 ms
 ```
