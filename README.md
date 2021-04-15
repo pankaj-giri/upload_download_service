@@ -2,7 +2,28 @@
 
 REST based file upload/download service
 
-Architecture -
+## Upload Workflow
+1. User uploads a file from the app or the browser. 
+2. The front end application - android, ios, or js, will generate an MD5 hash of the file, and the file will be streamed on the wire
+3. The upload service, will download the file, to its local drive, and compute the checksum, and if the input checksum and the computed checksum match, an upload success is sent back to the client, else the client will need to retry upload.
+
+## Download Workflow
+
+
+## Architecture
+The architecture uses a load balancer to distribute load across upload/download workers which are geographically distributed EC2 instances running the service.
+
+We could use a multi-level load balancer, to route majority of the traffic to the US region, when requests are made from the US region, and the remaining traffic to closest region.
+
+While this architecture, definitely improves availability and reliability of the service, but during the times when there is a surge of traffic, and all the workers are busy servicing the requests, there is no way to dynamically add more workers to cater to the surge.
+
+This is where AutoScaling groups may help out.
+
+<i>Other considerations :</i>
+
+* How will SQL db scale - for say about a 100M requests per month? Is sharding required here?
+* We may need to consider replication of S3 buckets to cater to performance
+* Is there a need to perform caching?
 
 ![upload_download_service](architecture/service_architecture.jpg?raw=true)
 
