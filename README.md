@@ -19,13 +19,20 @@ While this architecture, definitely improves availability and reliability of the
 
 This is where AutoScaling groups may help out.
 
+![upload_download_service](architecture/service_architecture.jpg?raw=true)
+
 <i>Other considerations :</i>
 
 * How will SQL db scale - for say about a 100M requests per month? Is sharding required here?
 * We may need to consider replication of S3 buckets to cater to performance
 * Is there a need to perform caching?
 
-![upload_download_service](architecture/service_architecture.jpg?raw=true)
+## Storage and RPS calculations
+
+## Model
+![upload_download_service](architecture/sql_er_diagram.jpg?raw=true)
+
+
 
 Steps to deploy on AWS
 
