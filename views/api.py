@@ -1,6 +1,8 @@
 import os
-from flask import Flask, flash, request, redirect, url_for, Blueprint
+from flask import (Flask, flash, request, redirect, 
+                  url_for, Blueprint, send_from_directory, jsonify)
 from werkzeug.utils import secure_filename
+from util.func_util import log_api
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'MOV', 'zip', 'jar'}
 UPLOAD_FOLDER = '/tmp/uploader/uploads/'
@@ -11,11 +13,9 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@api.route('/ping', methods=['GET'])
-def ping():
-    return 'Pong'
 
 @api.route('/upload', methods=['GET', 'POST'])
+@log_api
 def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
@@ -33,12 +33,22 @@ def upload_file():
             file.save(os.path.join(UPLOAD_FOLDER, filename))
             return f'Successful uploading {filename}'
 
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    '''
+    return 'Could not upload file'
+
+@api.route("/files", methods=['GET'])
+@log_api
+def list_files():
+    """Endpoint to list files on the server."""
+    files = []
+    for filename in os.listdir(UPLOAD_FOLDER):
+        path = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.isfile(path):
+            files.append(filename)
+    return jsonify(files)
+
+
+@api.route("/download/<path:path>")
+@log_api
+def download_file(path):
+    """Download a file."""
+    return send_from_directory(UPLOAD_FOLDER, path)
