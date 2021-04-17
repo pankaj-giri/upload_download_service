@@ -90,7 +90,7 @@ URL : /upload_download_service/upload
 Method : POST
 
 Data Params :
-Payload containing the key 'file' and value as the byte stream
+Payload containing the key 'file' and value as the byte stream and the MD5 hash of the file
 
 Success Response:
 Code : 200
