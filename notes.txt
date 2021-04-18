@@ -12,6 +12,46 @@ should be:
 bandwidth being a limiting factor on the user’s side, we can assume a steady state good
 connectivity on the last mile).</i>
 
+## Tech Stack
+* Python - Flask + Blueprint APIs
+* Gunicorn - WSGI Server
+* DB - ElasticSearch for metadata, Redis Cache
+* Docker
+* AWS S3 for file storage
+* AWS EC2 for hosting webserver
+* Route 53, Application Load Balancer
+
+## Architecture
+Architecture uses Route 53 to route the requests across regions.
+
+Every region is catered to by a set of AZs sitting behind a Load Balancer. The LB, routes the requests to appropriate AZ, depending on proxmity of the request, latency and the existing load on the AZ. 
+
+Once routed into the AZ, request served by EC2 instances which are managed by an auto-scaling group. This is used to scale out, when there is a surge in number of requests (time based), and scale down when the demand is low.
+
+Service is split to handle uploads and downloads in separate nodes. The reason being the following..
+
+* Uploads have to go through disk writes, which are going to be slower, than reads which may be served from the cache
+* A node can handle only limited number of connections, and if the nodes are busy serving up writes, the reads which can happen concurrently and very quickly will get unnecessary blocked
+* Its easier to scale out or down reads and writes independently, depending on demand
+
+ASG - Attached to Cloud Watch which scales in and out based on CPU usage etc...
+
+Type of EC2 instance - THis will be IO intensive.
+
+Dockerization of the service, instead of barebones EC2.
+
+S3 - Lifecycle policies - Files immediately required, Frequent, Infrequent, Glacier
+
+FileName in Files table
+FileType in Files table
+
+S3 directory structure
+/upload_download_service/<user_id>/<files>
+
+Logging and integration with splunk
+
+![upload_download_service](architecture/service_architecture2.jpg?raw=true)
+
 ## Storage and RPS calculations
 
 ### File Storage Requirements
@@ -25,6 +65,17 @@ Long term storage requirement : 10 years
 
 File storage required : 5M * 5MB * 12 months * 10 years = 3000 TB
 ```
+
+### Bandwidth requirements
+```
+Requests per month : 10M 
+Average File size : 5MB
+
+RPS : 10M/(30*24*60*60) = ~0.5 RPS
+Bandwidth : 0.5 * 5MB = ~2.5MBps for both uploads and downloads
+
+```
+
 
 ### Model
 ![upload_download_service](architecture/sql_er_diagram.jpg?raw=true)
@@ -43,21 +94,14 @@ Size of file table : ~250 bytes * 10M * 500  = ~ 1.25TB
 
 ```
 
-### Bandwidth requirements
-```
-Requests per month : 10M 
-Average File size : 5MB
+Can use either a NoSql or SQL db, and shard by User_ID.
 
-RPS : 10M/(30*24*60*60) = ~0.5 RPS
-Bandwidth : 0.5 * 5MB = ~2.5MBps for both uploads and downloads
-
-```
 
 ## APIs
 1. Upload file - This api allows upload of a file from the client application or web browser.
 
 ```
-URL : /upload
+URL : /upload_download_service/upload
 
 Method : POST
 
@@ -90,7 +134,7 @@ Content:  { 'error' : "Document file size is too large" }
 2. Download file - This api allows user to select a file for download
 
 ```
-URL : /download/<fname>/<uid> 
+URL : /upload_download_service/<fname>/<uid> 
 
 Method : GET
 
@@ -106,56 +150,6 @@ Code : 403
 Content : { 'error' : "client credentials invalid" }
 
 ```
-
-2. List files - List the most recent files for the user
-
-```
-URL : /list/<uid> 
-
-Method : GET
-
-URL Params :
-user_id
-
-Success Response:
-Code : 200
-Content : { 'file_name' : <filename>, 'file_metadata' : {...} }
-
-Error Response:
-Code : 403
-Content : { 'error' : "client credentials invalid" }
-
-```
-
-## Architecture
-Architecture uses Route 53 to route the requests across regions.
-
-Every region is catered to by a set of AZs sitting behind a Load Balancer. The LB, routes the requests to appropriate AZ, depending on proxmity of the request, latency and the existing load on the AZ. 
-
-Once routed into the AZ, request served by EC2 (Storage-Optimized) instances which are managed by an auto-scaling group. This is used to scale out, when there is a surge in number of requests (time based), and scale down when the demand is low.
-
-Service is split to handle uploads and downloads in separate nodes. The reason being the following..
-
-* Uploads have to go through disk writes, which are going to be slower, than reads which may be served from the cache
-* A node can handle only limited number of connections, and if the nodes are busy serving up writes, the reads which can happen concurrently and very quickly will get unnecessary blocked
-* Its easier to scale out or down reads and writes independently, depending on demand
-
-S3 directory structure
-/upload_download_service/<user_id>/<files>
-
-![upload_download_service](architecture/service_architecture2.jpg?raw=true)
-
-Can use either a NoSql or SQL db, and shard by User_ID.
-
-## Tech Stack
-* Python - Flask + Blueprint APIs
-* Gunicorn - WSGI Server
-* DB - ElasticSearch for metadata, Redis Cache
-* Docker
-* AWS S3 for file storage
-* AWS EC2 for hosting webserver
-* Route 53, Application Load Balancer
-
 
 ## Upload flow
 ![upload_download_service](architecture/upload_flow.jpg?raw=true)
@@ -176,6 +170,25 @@ Can use either a NoSql or SQL db, and shard by User_ID.
 
 ## API security
 ![upload_download_service](architecture/api_security.jpg?raw=true)
+
+
+<i>Other considerations :</i>
+
+* How will SQL db scale - for say about a 100M requests per month? Is sharding required here?
+Yes sharding on User ID may help here, and with that we could switch over to a NoSql db - need to check how to draw the ER diagram for a NoSql db.
+
+* We may need to consider replication of S3 buckets to cater to performance
+* Is there a need to perform caching?
+Yeah, this will definitely help with downloads, where, a server could hit the cache, before it turns to the db or s3. That will enormously help with performance. 
+Need to add cache layer to the architecture.
+* Add information about Autoscaling Groups and think what can be done better.
+* Logging - logging access information - who accessed which doc, how much time for upload, number of attempts, errors.
+* You cannot set up ELBs across regions. You will need route 53 to do cross region requests.
+
+
+Further reading:
+https://aws.amazon.com/blogs/architecture/scale-your-web-application-one-step-at-a-time/
+
 
 Steps to deploy on AWS
 
@@ -199,17 +212,25 @@ ssh -i system_design.pem ubuntu@52.55.169.6
 Use the following bootstrap script to install softwares
 
 ```
-sudo apt install docker.io
+sudo apt-get update -y
+sudo apt-get install apache2 -y
+sudo apt-get install gunicorn -y
+sudo apt-get -y install python3-pip
 ```
 
+Install gunicorn
+```
+sudo apt install gunicorn
+```
 
+Download the git project and run gunicorn
 
 ```
 git clone https://github.com/pankaj-giri/upload_download_service.git
 
 cd upload_download_service
 
-sh start_app.sh
+gunicorn --bind 0.0.0.0:8000 app:app
 ```
 
 Result of running Jmeter stress on a single node of EC2 instance (t2 micro) and with 3 worker threads

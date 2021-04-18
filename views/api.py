@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 from util.func_util import log_api
 
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'MOV', 'zip', 'jar'}
-UPLOAD_FOLDER = '/tmp/uploader/uploads/'
+UPLOAD_FOLDER = './data'
 
 api = Blueprint('api', __name__)
 
