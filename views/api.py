@@ -17,6 +17,12 @@ def allowed_file(filename):
 @api.route('/upload', methods=['GET', 'POST'])
 @log_api
 def upload_file():
+    '''
+    API to accept the uploaded file.
+    Receives the file as a part of POST form data.
+
+    Returns a 200, with a Succcess or failure message.
+    '''
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:
@@ -38,7 +44,11 @@ def upload_file():
 @api.route("/files", methods=['GET'])
 @log_api
 def list_files():
-    """Endpoint to list files on the server."""
+    '''
+    API to list the uploaded files for the user
+    Parameters: user_id as a get parameter
+    Returns : The list of files uploaded by the user and the metadata.
+    '''
     files = []
     for filename in os.listdir(UPLOAD_FOLDER):
         path = os.path.join(UPLOAD_FOLDER, filename)
@@ -50,5 +60,9 @@ def list_files():
 @api.route("/download/<path:path>")
 @log_api
 def download_file(path):
-    """Download a file."""
+    '''
+    API to download the specified file
+    Parameters: file_name, which indicates the file to be downloaded
+    Returns : The file the user had requested for download
+    '''
     return send_from_directory(UPLOAD_FOLDER, path)
