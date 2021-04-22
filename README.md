@@ -48,8 +48,8 @@ Size of file table : ~250 bytes * 10M * 500  = ~ 1.25TB
 Requests per month : 10M 
 Average File size : 5MB
 
-RPS : 10M/(30*24*60*60) = ~0.5 RPS
-Bandwidth : 0.5 * 5MB = ~2.5MBps for both uploads and downloads
+RPS : 10M/(30*24*60*60) = ~4 RPS
+Bandwidth : 4 * 5MB = ~20MBps for both uploads and downloads
 
 ```
 
