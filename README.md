@@ -23,8 +23,9 @@ requirements?
 ## Contents
 ### 1. Storage calculations
 ### 2. APIs
-### 3. Sequences
-### 4. API security
+### 3. Architecture
+### 4. Sequences
+### 5. API security
 
 <br>
 <br>
