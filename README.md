@@ -53,11 +53,10 @@ File storage required : 5M * 5MB * 12 months * 10 years = 3000 TB
 Assumptions :
 
 Number of Users : 10 M
-Number of active users per month : 1 M
-Average number of files/user : 500
+Average number of files/user : 2000
 
 Size of user table : ~100 bytes * 10M  = ~1GB
-Size of file table : ~250 bytes * 10M * 500  = ~ 1.25TB
+Size of file table : ~250 bytes * 10M * 2000  = ~ 5TB
 
 ```
 
