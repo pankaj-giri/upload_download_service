@@ -12,6 +12,23 @@ should be:
 bandwidth being a limiting factor on the user’s side, we can assume a steady state good
 connectivity on the last mile).</i>
 
+Solution​ : Design a service which meets the above criteria, clearly defining assumptions and
+considerations for your choice of protocol, stack, file system, infrastructure, etc. Please consider
+uptime guarantees, scalability and if possible geo-residency of file storage. Plan for outages and
+disaster recovery. Present your considerations with architectural and control flow diagrams, API
+constructs, error handling, and CRC checks. How will you future proof this solution thinking
+ahead about the extensibility of your solution for future Product enhancements and
+requirements?
+
+## Contents
+### 1. Storage calculations
+### 2. APIs
+### 3. Sequences
+### 4. API security
+
+<br>
+<br>
+
 ## Storage and RPS calculations
 
 ### File Storage Requirements
